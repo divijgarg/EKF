@@ -2,7 +2,8 @@
 
 #include "Eigen/Dense"
 
-int main() {
+int main()
+{
     EKF ekf;
 
     return 0;
