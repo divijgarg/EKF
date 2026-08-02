@@ -8,16 +8,9 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
-    - name: configure
-      run: ./configure
-    - name: make
-      run: make
-    - name: make check
-      run: make check
-    - name: make distcheck
-      run: make distcheck
+    - name: build
+      run: g++ -std=c++20 -O2 -Wall -Wextra -I. EKF.cpp Simulation.cpp -o ekf_sim
