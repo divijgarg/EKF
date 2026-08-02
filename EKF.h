@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <string>
-
 #include "Eigen/Dense"
 
 #include "constants.h"
@@ -22,26 +21,31 @@ public:
     EKF();
     ~EKF();
     void init(); // initializes the entire filter
+    void tick();
+
+    const Eigen::Matrix<double, NUM_STATES, 1> &get_x();
+    void set_measurement(Eigen::Matrix<double,NUM_MEASUREMENTS,1> input);
+    void set_control(Eigen::Matrix<double,NUM_CONTROLS,1> input);
+
+
+
+private:
+
     void setF(double dt);
     void setG(double dt);
     void setH();
     void setR();
     void setQ(double dt);
     void compute_K(); // calculate the kalman gain
-    void tick();
-
     void update();
     void predict();
-
-private: 
-    Eigen::Matrix<double, NUM_STATES, 1> x_est; //estimate of i at time step i
-    Eigen::Matrix<double, NUM_STATES, 1> x_pred; //prediction of i+1 at time step i
-    Eigen::Matrix<double, NUM_STATES, NUM_STATES> P_est; // estimate of i at time step i
-    Eigen::Matrix<double, NUM_STATES, NUM_STATES> P_pred; //prediction of i+1 at time step i
-
+    
+    Eigen::Matrix<double, NUM_STATES, 1> x_est;           // estimate of i at time step i
+    Eigen::Matrix<double, NUM_STATES, 1> x_pred;          // prediction of i+1 at time step i
+    Eigen::Matrix<double, NUM_STATES, NUM_STATES> P_est;  // estimate of i at time step i
+    Eigen::Matrix<double, NUM_STATES, NUM_STATES> P_pred; // prediction of i+1 at time step i
     Eigen::Matrix<double, NUM_MEASUREMENTS, 1> z; // assume we're getting positional data only
     Eigen::Matrix<double, NUM_CONTROLS, 1> u;     // our control input is acceleration
-    
     Eigen::Matrix<double, NUM_STATES, NUM_STATES> Q;             // process noise matrix
     Eigen::Matrix<double, NUM_MEASUREMENTS, NUM_STATES> H;       // observation matrix. we are only tracking accelerometer measurements for now
     Eigen::Matrix<double, NUM_STATES, NUM_MEASUREMENTS> K;       // Kalman gain matrix
@@ -49,6 +53,7 @@ private:
     Eigen::Matrix<double, NUM_STATES, NUM_STATES> F;             // State transition matrix
     Eigen::Matrix<double, NUM_STATES, NUM_CONTROLS> G;           // State transition matrix
     Eigen::Matrix<double, NUM_STATES, NUM_STATES> id;
+
 };
 
 #endif
