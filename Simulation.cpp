@@ -110,13 +110,19 @@ int main()
     history.reserve(NUM_TICKS);
 
     Eigen::Matrix<double, NUM_MEASUREMENTS, 1> measure;
+    Eigen::Matrix<double, NUM_CONTROLS, 1> control;
 
     measure.setZero();
+    control.setZero();
+
     for (int k = 0; k < NUM_TICKS; ++k)
     {
         measure(0,0) = baro_height[k];
         ekf.set_measurement(measure);
+        control(0,0) = accel_y[k]*(-1) - 9.81;
+        ekf.set_control(control);
         ekf.tick();
+
         history.push_back(ekf.get_x());
     }
 

@@ -16,8 +16,8 @@ void EKF::init()
     z.setZero();
     u.setZero();
 
-    P_est = Eigen::Matrix<double, NUM_STATES, NUM_STATES>::Identity() * 1e3;
-    P_pred = Eigen::Matrix<double, NUM_STATES, NUM_STATES>::Identity() * 1e3;
+    P_est = Eigen::Matrix<double, NUM_STATES, NUM_STATES>::Identity() * 1e1;
+    P_pred = Eigen::Matrix<double, NUM_STATES, NUM_STATES>::Identity() * 1e1;
 
     setQ(set_dt);
     setR();

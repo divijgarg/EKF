@@ -6,7 +6,7 @@
 constexpr int NUM_STATES = 6;       // x,vx,y,vy,z,vz
 constexpr int NUM_CONTROLS =3; //ax,ay,az
 constexpr int NUM_MEASUREMENTS = 3; // x,y,z
-constexpr double set_dt = 0.05;  //seconds
+constexpr double set_dt = 0.01;  //seconds
 
 //errors
 
