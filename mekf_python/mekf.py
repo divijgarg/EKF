@@ -1,49 +1,21 @@
 import numpy as np
 import numpy.linalg as la
 import math
+import attitude_functions as att
 
 # this file is to validate my approach to estimating the attitude quaternion q.
 
 # assume q = [q_vec, q_4]
 
 
-def return_E(q):
-
-    E = np.zeros((4, 3))
-    E[0] = [q[3], -1 * q[2], q[1]]
-    E[1] = [q[2], q[3], -1 * q[0]]
-    E[2] = [-1 * q[1], q[0], q[3]]
-    E[3] = [-1 * q[0], -1 * q[1], -1 * q[2]]
-
-    return E
-
-
-def return_cross_matrix(x):
-
-    X = np.zeros((3, 3))
-    X[0] = [0, -1 * x[2], x[1]]
-    X[1] = [x[2], 0, -1 * x[0]]
-    X[2] = [-1 * x[1], x[0], 0]
-
-    return X
-
 
 def return_H_k(q, r):
-    A = return_A(q)
+    A = att.return_A(q)
     H_k = np.zeros((3, 6))
-    H_k[0:3, 0:3] = return_cross_matrix(A @ r)
+    H_k[0:3, 0:3] = att.return_cross_matrix(A @ r)
 
     return H_k
 
-
-def return_A(q):
-    q_vec = q[0:3]
-    A = (
-        (2 * q[3] ** 2 - 1) * np.identity(3)
-        - 2 * q[3] * return_cross_matrix(q_vec)
-        + 2 * np.outer(q_vec, q_vec)
-    )
-    return A
 
 
 def return_h_k(A, r):
@@ -52,7 +24,7 @@ def return_h_k(A, r):
 
 def return_F(w):
     F = np.zeros((6, 6))
-    F[0:3, 0:3] = -1 * return_cross_matrix(w)
+    F[0:3, 0:3] = -1 * att.return_cross_matrix(w)
     F[0:3, 3:6] = -1 * np.identity(3)
     return F
 
@@ -87,9 +59,6 @@ def main():
     w = data[:, 7:10]
     q_true = data[:, 10:14]
     
-
-    # constant gyro bias baked into the sample data by test_data_generator.py;
-    # it is only in the CSV header comment, not in a column.
     b_true = np.array([0.005, -0.003, 0.002])
 
     r1 = np.array([1.0, 0, 0])
@@ -131,13 +100,13 @@ def gain(P_k, H_k, R_k):
 
 
 def update(P_k, H_k, K_k, y_k, r_k, q_k, beta_k):
-    A_k = return_A(q_k)
+    A_k = att.return_A(q_k)
     P = (np.identity(6) - K_k @ H_k) @ P_k
     delta_x_k = K_k @ (y_k - return_h_k(A_k, r_k))
     delta_theta_k = delta_x_k[0:3]
     delta_beta_k = delta_x_k[3:6]
 
-    q = q_k + 0.5 * return_E(q_k) @ delta_theta_k
+    q = q_k + 0.5 * att.return_E(q_k) @ delta_theta_k
     q = q / la.norm(q)
     beta = beta_k + delta_beta_k
 
@@ -150,7 +119,7 @@ def propogate(beta, w, q, P, dt):
 
     w_hat = w - beta
     F = return_F(w_hat)
-    q_hat_dot = 0.5 * return_E(q) @ w_hat
+    q_hat_dot = 0.5 * att.return_E(q) @ w_hat
     P_dot = F @ P + P @ F.T + G @ Q @ G.T
 
     q_k = q_hat_dot * dt + q
