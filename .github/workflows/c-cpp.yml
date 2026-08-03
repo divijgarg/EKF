@@ -1,4 +1,4 @@
-name: C/C++ CI
+name: CI
 
 on:
   push:
@@ -13,4 +13,19 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: build
+      working-directory: ekf
       run: g++ -std=c++20 -O2 -Wall -Wextra -I. EKF.cpp Simulation.cpp -o ekf_sim
+
+  mekf:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    - run: pip install numpy
+    - name: run filter on sample data
+      working-directory: mekf_python
+      run: python mekf.py
+    
