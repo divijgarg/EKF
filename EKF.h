@@ -20,7 +20,7 @@ class EKF
 public:
     EKF();
     ~EKF();
-    void init(); // initializes the entire filter
+    void init(); 
     void tick();
 
     const Eigen::Matrix<double, NUM_STATES, 1> &get_x();

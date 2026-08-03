@@ -50,7 +50,7 @@ void EKF::tick() {
     compute_K();
     update();
     predict();
-    printMatrix("x_est: ", x_est);
+    // printMatrix("x_est: ", x_est);
 }
 
 void EKF::setR() {
@@ -104,7 +104,7 @@ void EKF::setG(double dt)
     G(3, 1) = dt;
     G(4, 2) = 0.5 * dt * dt;
     G(5, 2) = dt;
-    printMatrix("G: ", G);
+    // printMatrix("G: ", G);
 }
 void EKF::setH()
 {

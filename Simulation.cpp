@@ -5,14 +5,12 @@
 #include <string>
 #include <vector>
 
-
 #include "Eigen/Dense"
 
 constexpr int NUM_TICKS = 60000;
 
 const std::string DATA_DIR =
     "Flight Data/CATS/cats_euroc23_full_datasets/decoded/01_astg__main/";
-
 
 static std::vector<std::string> split_csv_line(const std::string &line)
 {
@@ -117,9 +115,11 @@ int main()
 
     for (int k = 0; k < NUM_TICKS; ++k)
     {
-        measure(0,0) = baro_height[k];
+        measure(0, 0) = baro_height[k];
         ekf.set_measurement(measure);
-        control(0,0) = accel_y[k]*(-1) - 9.81;
+        control(0, 0) = accel_y[k] * (-1) - 9.81;
+        control(1,0) = accel_x[k];
+        control(2,0) = accel_z[k];
         ekf.set_control(control);
         ekf.tick();
 
@@ -134,9 +134,5 @@ int main()
         out << s.transpose().format(csv) << "\n";
     }
 
-    
     return 0;
 }
-
-
-
