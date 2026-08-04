@@ -15,10 +15,10 @@ r1 = np.array([1.0, 0.0, 0.0])              # ref 1
 r2 = np.array([0.0, 1.0, 0.0])              # ref 2
 
 def w_true_at(t):
-    # return np.array([0.02*np.sin(0.05*t),
-    #                  -0.01*np.cos(0.03*t),
-    #                  0.03*np.sin(0.02*t + 1.0)])
-    return np.array([0.2,0,0])
+    return np.array([0.8*np.sin(0.05*t),
+                     -0.7*np.cos(0.03*t),
+                     0.9*np.sin(0.02*t + 1.0)])
+    # return np.array([0.8,0.1,0.9])
 
 q_true = np.array([0.0, 0.0, 0.0, 1.0])
 rows = []
