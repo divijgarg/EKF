@@ -34,12 +34,13 @@ def return_G():
     return G
 
 
-def return_Q():
-    sigma_v = 0.01
-    sigma_u = 0.0001
+def return_Q(dt,sigma_v,sigma_u):
+    
     Q = np.zeros((6, 6))
-    Q[0:3, 0:3] = sigma_v**2 * np.identity(3)
-    Q[3:6, 3:6] = sigma_u**2 * np.identity(3)
+    Q[0:3, 0:3] = (sigma_v**2 * dt + 1 / 2 * sigma_u**2 * dt**3) * np.identity(3)
+    Q[0:3, 3:6] = -0.5 * sigma_u**2 * dt**2 * np.identity(3)
+    Q[3:6, 0:3] = -0.5 * sigma_u**2 * dt**2 * np.identity(3)
+    Q[3:6, 3:6] = sigma_u**2 * dt * np.identity(3)
 
     return Q
 
@@ -58,48 +59,58 @@ def read_flight_data(filename):
     q_true = data[
         :, [col("q_true_1"), col("q_true_2"), col("q_true_3"), col("q_true_4")]
     ]
+    r1 = data[:, [col("r1_x"), col("r1_y"), col("r1_z")]]
+    r2 = data[:, [col("r2_x"), col("r2_y"), col("r2_z")]]
+    sun_valid = data[:, [col("sun_valid")]]
 
-    return t, y1, y2, w, q_true
+    return t, y1, y2, w, q_true, r1, r2, sun_valid
 
 
 def main():
     # initialization phase
-    q_k = np.array([-0.0403, 0.0167, 0.3823, 0.9230])
+    sigma_v = 7.615435e-05
+    sigma_u =9.401772e-13
+    sigma_mag = 0.3
+    sigma_sun = 0.000872663
+    
+    q_k = np.array([0,0,0,1]) 
     b_k = np.array([0.0, 0.0, 0.0])
-    P_k = np.diag([0.1] * 3 + [1e-4] * 3)
+    P_k = np.diag([sigma_v] * 3 + [sigma_u] * 3)
 
-    t, y1, y2, w, q_true = read_flight_data("flight_data.csv")
-    # print(t)
-    # print(y1)
-    # print(w)
-    # print(q_true)
+    t, y1, y2, w, q_true, r1, r2, sun_valid = read_flight_data("trmm_flight_data.csv")
 
-    b_true = np.array([0.005, -0.003, 0.002])
+    b_true = np.array([0.0, 0, 0])
 
-    r1 = np.array([0.072718, 0.517414, -0.85264])
-    r2 = np.array([0, 0,1])
-    R_k = np.identity(3) * 0.01**2
+    
+    R_1_k = np.identity(3) * sigma_sun**2
+    R_2_k = np.identity(3) * sigma_mag**2
 
     rows = []
 
-    dt = 0.01
+    dt = 10
     for i in range(0, len(y1)):
-        H_k = return_H_k(q_k, r1)
-        K_k = gain(P_k, H_k, R_k)
-        if K_k is not None and not np.isnan(K_k).any() and not np.isinf(K_k).any():
-            P_k, q_k, b_k = update(P_k, H_k, K_k, y1[i], r1, q_k, b_k)
-        
-        
-        H_k = return_H_k(q_k, r2)
-        K_k = gain(P_k, H_k, R_k)
+        rows.append(np.concatenate(([t[i]], q_k, np.diag(P_k), q_true[i], b_k, b_true)))
+        H_k = return_H_k(q_k, r1[i])
+        K_k = gain(P_k, H_k, R_1_k)
+        if (
+            sun_valid[i] == 1
+            and K_k is not None
+            and not np.isnan(K_k).any()
+            and not np.isinf(K_k).any()
+        ):
+            P_k, q_k, b_k = update(P_k, H_k, K_k, y1[i], r1[i], q_k, b_k)
+
+        H_k = return_H_k(q_k, r2[i])
+        K_k = gain(P_k, H_k, R_2_k)
 
         if K_k is not None and not np.isnan(K_k).any() and not np.isinf(K_k).any():
-            P_k, q_k, b_k = update(P_k, H_k, K_k, y2[i], r2, q_k, b_k)
-            
+            P_k, q_k, b_k = update(P_k, H_k, K_k, y2[i], r2[i], q_k, b_k)
+
         if i % 100 == 0:
-            print(i / len(y1)*100, "% complete.")
-        q_k, P_k = propogate(b_k, w[i], q_k, P_k, dt)
-        rows.append(np.concatenate(([t[i]], q_k, np.diag(P_k), q_true[i], b_k, b_true)))
+            print(i / len(y1) * 100, "% complete.")
+            # print(b_k)
+
+        q_k, P_k = propogate(b_k, w[i], q_k, P_k, dt,sigma_v,sigma_u)
 
     header = (
         "t,"
@@ -137,9 +148,9 @@ def update(P_k, H_k, K_k, y_k, r_k, q_k, beta_k):
     return P, q, beta
 
 
-def propogate(beta, w, q, P, dt):
+def propogate(beta, w, q, P, dt,sigma_v,sigma_u):
     G = return_G()
-    Q = return_Q()
+    Q = return_Q(dt,sigma_v,sigma_u)
 
     w_hat = w - beta
     F = return_F(w_hat)
